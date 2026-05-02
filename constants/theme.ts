@@ -7,6 +7,8 @@ import { Platform } from 'react-native';
 const tintColorLight = '#ff6b9d'; // Vibrant rose
 const tintColorDark = '#ffd166'; // Gold
 
+export type ColorSchemeType = 'light' | 'dark';
+
 export const Colors = {
   light: {
     text: '#1a1a2e',
@@ -36,7 +38,8 @@ export const Colors = {
     tabIconDefault: '#495057',
     tabIconSelected: tintColorDark,
   },
-};
+} as const;
+
 
 export const Shadows = {
   card: {
@@ -68,23 +71,21 @@ export const Fonts = Platform.select({
     serif: 'ui-serif',
     rounded: 'ui-rounded',
     mono: 'ui-monospace',
-    title: 'ui-rounded',
   },
   default: {
     sans: 'normal',
     serif: 'serif',
     rounded: 'normal',
     mono: 'monospace',
-    title: '-apple-system',
   },
   web: {
     sans: "system-ui, -apple-system",
     serif: "Georgia, serif",
     rounded: "'SF Pro Rounded', sans-serif",
     mono: "SFMono-Regular, monospace",
-    title: "'SF Pro Display', system-ui",
   },
 });
+
 
 export const BorderRadius = {
   card: 24,

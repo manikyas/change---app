@@ -18,11 +18,33 @@ export const baseData = {
     { id: "8", name: "Dinner 🍽", done: false },
     { id: "9", name: "Skincare ✨", done: false },
   ],
+  dailyRecords: {},
+};
+
+export const defaultDailyRecord = {
+  waterLiters: 0,
+  sleepSessions: [],
+  studySessions: [],
+  activeSleepStart: null,
+  activeStudyStart: null,
+  checklist: [],
+  timeBlocks: [],
+};
+
+const pad = (value) => value.toString().padStart(2, "0");
+
+export const getDateKey = (date = new Date()) => {
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 };
 
 export const loadData = async () => {
   const data = await AsyncStorage.getItem("appData");
-  return data ? JSON.parse(data) : baseData;
+  const parsed = data ? JSON.parse(data) : baseData;
+  return {
+    ...baseData,
+    ...parsed,
+    dailyRecords: parsed.dailyRecords || {},
+  };
 };
 
 export const saveData = async (data) => {

@@ -1,8 +1,8 @@
+import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { loadData, saveData } from "../store";
-
 
 export default function Afternoon() {
   const router = useRouter();
@@ -16,7 +16,7 @@ export default function Afternoon() {
   const init = async () => {
     const stored = await loadData();
     setData(stored);
-    setTasks(stored.Afternoon);
+    setTasks(stored.Afternoon || []);
   };
 
   const updateData = async (updatedTasks) => {
@@ -33,148 +33,312 @@ export default function Afternoon() {
     updateData(updated);
   };
 
+  const deleteTask = (id) => {
+    const updated = tasks.filter(t => t.id !== id);
+    updateData(updated);
+  };
+
   const addTask = () => {
-    if (!newTask) return;
+    if (!newTask.trim()) return;
     const updated = [...tasks, { id: Date.now().toString(), name: newTask, done: false }];
     setNewTask("");
     updateData(updated);
   };
 
+  const completedCount = tasks.filter(t => t.done).length;
+  const totalCount = tasks.length;
+
   return (
-    <ThemedGradient>
-      <ScrollView contentContainerStyle={styles.container}>
+    <LinearGradient colors={["#fff9c4", "#fff59d", "#ffeb3b"]} style={{ flex: 1 }}>
+      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Afternoon 🌞</Text>
+          <Text style={styles.subtitle}>Stay consistent 💫</Text>
+          
+          {totalCount > 0 && (
+            <View style={styles.progressContainer}>
+              <View style={styles.progressBar}>
+                <View 
+                  style={[styles.progressFill, { width: `${totalCount > 0 ? (completedCount / totalCount) * 100 : 0}%` }]} 
+                />
+              </View>
+              <Text style={styles.progressText}>{completedCount} of {totalCount} completed</Text>
+            </View>
+          )}
+        </View>
 
-        <Text style={styles.title}>Afternoon 🌞</Text>
-        <Text style={styles.subtitle}>Stay consistent 💫</Text>
-
-        {tasks.map(task => (
-          <TouchableOpacity key={task.id} style={[styles.card, task.done && styles.doneCard]} onPress={() => toggleTask(task.id)}>
-            <Text style={task.done ? styles.doneText : styles.text}>
-              {task.done ? "✔ " : "○ "} {task.name}
-            </Text>
-          </TouchableOpacity>
-        ))}
+        {tasks.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyEmoji}>☕</Text>
+            <Text style={styles.emptyText}>No afternoon tasks yet</Text>
+            <Text style={styles.emptySubtext}>Keep up the momentum—add a task!</Text>
+          </View>
+        ) : (
+          tasks.map(task => (
+            <View key={task.id} style={styles.taskWrapper}>
+              <TouchableOpacity 
+                style={[styles.card, task.done && styles.doneCard]} 
+                onPress={() => toggleTask(task.id)}
+                activeOpacity={0.7}
+              >
+                <View style={styles.taskContent}>
+                  <Text style={styles.taskIcon}>{task.done ? "✅" : "⭕"}</Text>
+                  <Text style={task.done ? styles.doneText : styles.text}>
+                    {task.name}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.deleteBtn}
+                onPress={() => deleteTask(task.id)}
+              >
+                <Text style={styles.deleteIcon}>✕</Text>
+              </TouchableOpacity>
+            </View>
+          ))
+        )}
 
         <View style={styles.inputBox}>
-          <TextInput placeholder="Add something..." value={newTask} onChangeText={setNewTask} style={styles.input} />
-          <TouchableOpacity style={styles.addBtn} onPress={addTask}>
+          <TextInput 
+            placeholder="Add something..." 
+            placeholderTextColor="#ccc"
+            value={newTask} 
+            onChangeText={setNewTask} 
+            style={styles.input}
+            onSubmitEditing={addTask}
+          />
+          <TouchableOpacity 
+            style={[styles.addBtn, newTask.trim() === "" && styles.addBtnDisabled]} 
+            onPress={addTask}
+            activeOpacity={0.7}
+          >
             <Text style={styles.btnText}>＋</Text>
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity style={styles.nextBtn} onPress={() => router.push("/evening")}>
+        <TouchableOpacity 
+          style={styles.nextBtn} 
+          onPress={() => router.push("/evening")}
+          activeOpacity={0.8}
+        >
           <Text style={styles.nextText}>Next →</Text>
         </TouchableOpacity>
 
       </ScrollView>
-    </ThemedGradient>
+    </LinearGradient>
   );
-
 }
 
 const styles = StyleSheet.create({
-  container: {
-    padding: Spacing.xl,
+  container: { 
+    padding: 25, 
     alignItems: "center",
-    flexGrow: 1
+    paddingBottom: 40
   },
 
-  title: {
-    fontSize: 48,
-    fontWeight: "700",
-    fontFamily: Fonts.rounded,
-    textAlign: "center",
-    marginTop: Spacing.xl,
-    marginBottom: Spacing.md
-  },
-
-  subtitle: {
-    fontSize: 20,
-    color: Colors.light.icon,
-    marginBottom: Spacing.lg,
-    textAlign: "center",
-    fontWeight: "500",
-    lineHeight: 26
-  },
-
-  card: {
-    width: "92%",
-    backgroundColor: Colors.light.glass,
-    borderRadius: BorderRadius.card,
-    marginVertical: Spacing.sm,
-    padding: Spacing.lg,
-    borderWidth: 1,
-    borderColor: Colors.light.glassBorder,
-    ...Shadows.card,
+  header: {
+    width: "100%",
+    marginBottom: 25,
     alignItems: "center"
   },
 
-  doneCard: {
-    backgroundColor: Colors.light.success + '20',
-    borderColor: Colors.light.success
+  title: { 
+    fontSize: 38, 
+    fontWeight: "900",
+    marginTop: 15,
+    color: "#f57f17",
+    textAlign: "center"
   },
 
-  text: {
-    fontSize: 18,
-    textAlign: "center",
+  subtitle: { 
+    color: "#f9a825",
+    marginBottom: 15,
+    fontSize: 16,
+    fontWeight: "600",
+    textAlign: "center"
+  },
+
+  progressContainer: {
+    width: "95%",
+    alignItems: "center"
+  },
+
+  progressBar: {
+    width: "100%",
+    height: 6,
+    backgroundColor: "rgba(255, 255, 255, 0.6)",
+    borderRadius: 3,
+    overflow: "hidden",
+    marginBottom: 8
+  },
+
+  progressFill: {
+    height: "100%",
+    backgroundColor: "#f57f17",
+    borderRadius: 3
+  },
+
+  progressText: {
+    fontSize: 12,
+    color: "#e65100",
     fontWeight: "600"
   },
 
-  doneText: {
-    fontSize: 18,
-    textAlign: "center",
-    textDecorationLine: "line-through",
-    color: Colors.light.icon
-  },
-
-  inputBox: {
-    flexDirection: "row",
-    marginTop: Spacing.lg,
-    width: "92%",
-    backgroundColor: Colors.light.glass,
-    borderRadius: BorderRadius.input,
-    padding: Spacing.md,
+  emptyState: {
     alignItems: "center",
-    ...Shadows.card,
-    borderWidth: 1,
-    borderColor: Colors.light.glassBorder
+    paddingVertical: 60,
+    width: "100%"
   },
 
-  input: {
-    flex: 1,
-    fontSize: 16,
-    paddingVertical: 8,
-    color: Colors.light.text
+  emptyEmoji: {
+    fontSize: 60,
+    marginBottom: 15
   },
 
-  addBtn: {
-    backgroundColor: Colors.light.accent,
-    borderRadius: BorderRadius.small,
-    padding: 14,
-    marginLeft: Spacing.sm
-  },
-
-  btnText: {
-    color: "#fff",
-    fontSize: 20,
-    fontWeight: "700"
-  },
-
-  nextBtn: {
-    marginTop: Spacing.xl,
-    paddingVertical: Spacing.lg,
-    paddingHorizontal: Spacing.xl * 1.5,
-    borderRadius: BorderRadius.button,
-    backgroundColor: Colors.light.accent,
-    ...Shadows.button,
-    alignSelf: "center",
-    marginBottom: Spacing.xl
-  },
-
-  nextText: {
-    color: "#fff",
-    fontWeight: "700",
+  emptyText: {
     fontSize: 18,
-    fontFamily: Fonts.rounded
+    fontWeight: "700",
+    color: "#e65100",
+    marginBottom: 8
+  },
+
+  emptySubtext: {
+    fontSize: 14,
+    color: "#f9a825",
+    textAlign: "center"
+  },
+
+  taskWrapper: {
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: 8,
+    paddingHorizontal: "5%"
+  },
+
+  card: {
+    flex: 1,
+    backgroundColor: "#fff",
+    padding: 16,
+    borderRadius: 16,
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    elevation: 4,
+    borderLeftWidth: 4,
+    borderLeftColor: "#f57f17"
+  },
+
+  doneCard: { 
+    backgroundColor: "#fff9c4",
+    borderLeftColor: "#4caf50"
+  },
+
+  taskContent: {
+    flexDirection: "row",
+    alignItems: "center"
+  },
+
+  taskIcon: {
+    fontSize: 18,
+    marginRight: 12
+  },
+
+  text: { 
+    textAlign: "left",
+    flex: 1,
+    fontSize: 15,
+    color: "#212121",
+    fontWeight: "500"
+  },
+
+  doneText: { 
+    textAlign: "left",
+    flex: 1,
+    fontSize: 15,
+    textDecorationLine: "line-through", 
+    color: "gray",
+    fontWeight: "500"
+  },
+
+  deleteBtn: {
+    marginLeft: 12,
+    padding: 8,
+    backgroundColor: "#ffebee",
+    borderRadius: 50,
+    justifyContent: "center",
+    alignItems: "center",
+    width: 36,
+    height: 36
+  },
+
+  deleteIcon: {
+    fontSize: 16,
+    color: "#c62828",
+    fontWeight: "bold"
+  },
+
+  inputBox: { 
+    flexDirection: "row", 
+    width: "100%", 
+    marginTop: 25,
+    backgroundColor: "#fff", 
+    borderRadius: 16, 
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    elevation: 3,
+    marginHorizontal: "5%"
+  },
+
+  input: { 
+    flex: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    fontSize: 14,
+    color: "#212121"
+  },
+
+  addBtn: { 
+    backgroundColor: "#f57f17", 
+    borderRadius: 50, 
+    padding: 10,
+    marginLeft: 8,
+    justifyContent: "center",
+    alignItems: "center",
+    width: 40,
+    height: 40
+  },
+
+  addBtnDisabled: {
+    backgroundColor: "#ccc"
+  },
+
+  btnText: { 
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "bold"
+  },
+
+  nextBtn: { 
+    marginTop: 30, 
+    marginBottom: 15,
+    backgroundColor: "#f57f17", 
+    paddingVertical: 14,
+    paddingHorizontal: 40,
+    borderRadius: 30,
+    shadowColor: "#f57f17",
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 6
+  },
+
+  nextText: { 
+    color: "#fff", 
+    fontWeight: "700",
+    fontSize: 15
   }
 });
